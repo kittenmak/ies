@@ -1,62 +1,58 @@
 package ies;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
- * Created by Kitten on 30/11/2016.
+ * Created by michaelleung on 30/11/2016.
  */
 public class KioskClient {
+    private Socket clientSocket;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private ArrayList<String> stringList = new ArrayList<String>();
 
-    private static Socket clientSocket;
-    private static DataInputStream in;
-    private static DataOutputStream out;
-    private String assignedLift;
-
-
-    public KioskClient() {
-        connect("0,0,2,4");
-
-    }
-
-    public void connect(String request){
+    public KioskClient(){
+        connectServer();
+        String msg = "haha2";
         try {
-            connectServer();
-            send(request);
-            assignedLift = receive();
-            System.out.println(assignedLift);
-        } catch (Exception e) {
+            send(msg);
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        finally {
-            disconnect();
+        String data = null;
+        try {
+            data = receive();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        stringList.add(data);
+
+    }
+
+    void connectServer(){
+        try {
+            clientSocket = new Socket(SharedConsts.ServerAddress, SharedConsts.ServerPort);
+            System.out.printf("KC Connected to server using local port: %d.\n", clientSocket.getLocalPort());
+            in = new DataInputStream(clientSocket.getInputStream());
+            out = new DataOutputStream(clientSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    static void connectServer() throws IOException {
-        clientSocket = new Socket(SharedConsts.ServerAddress, SharedConsts.ServerPort);
-        System.out.printf("Connected to server using local port: %d.\n", clientSocket.getLocalPort());
-
-        in = new DataInputStream(clientSocket.getInputStream());
-        out = new DataOutputStream(clientSocket.getOutputStream());
-
-    }
-
-    public static void send(String sendMsg) throws IOException {
-        AES aes = new AES(SharedConsts.Key);
-        String msg, encrypt_msg, decrypt_msg;
-        encrypt_msg = aes.encrypt(sendMsg);//format("InputType, currentFloor, destination/RFID, timestamp")
-
-
-        out.writeInt(encrypt_msg.length());
-        out.write(encrypt_msg.getBytes(), 0, encrypt_msg.length());
+    public final synchronized void send(String msg) throws IOException {
+        out.writeInt(msg.length());
+        out.write(msg.getBytes(), 0, msg.length());
         out.flush();
     }
 
-    public static String receive() throws IOException {
-        AES aes = new AES(SharedConsts.Key);
+    public final synchronized String receive() throws IOException {
         byte[] data = new byte[4];
         int size;
         int len;
@@ -68,11 +64,11 @@ public class KioskClient {
             size -= len;
         } while (size > 0);
 
-        return aes.decrypt(new String(data));
+        return new String(data);
     }
 
-    public static void disconnect() {
-        System.out.println("sent");
+    public void disconnect() {
+        System.out.println("KC disconnected.");
         try {
             in.close();
             out.close();
@@ -81,16 +77,7 @@ public class KioskClient {
         }
     }
 
-
-
-
-
-
-
-
-    public static void main(String args[]) {
-        new KioskClient();
-    }
-
-
+    public static void main(String args[]){
+        KioskClient kioskClient = new KioskClient();
+    } // end of main
 }

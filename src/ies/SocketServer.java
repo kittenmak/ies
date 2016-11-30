@@ -6,20 +6,45 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * Created by Kitten on 30/11/2016.
+ * Created by michaelleung on 30/11/2016.
  */
-public class SocketServer extends Thread{
+
+//======================================================================
+// Thread
+public class SocketServer implements Runnable {
     Socket clientSocket = null;
     DataInputStream in;
     DataOutputStream out;
-    AES aes = new AES(SharedConsts.Key);
 
-    public SocketServer(Socket clientSocket) {
+    protected String receivedMsg;
+    protected String id;
+    protected ControlPanel newControlPanelNew;
+//    protected newMBox mbox = null;
+//    protected Logger log = null;
+
+    //------------------------------------------------------------
+    // AppThread
+    public SocketServer(Socket clientSocket, String id, ControlPanel ControlPanelNew) {
         this.clientSocket = clientSocket;
-    }
+        this.id = id;
+        this.newControlPanelNew = ControlPanelNew;
+//        log = newControlPanel.getLogger();
+//        mbox = new newMBox(id, log);
+//        ControlPanelNew.regThread(this);
+    } // AppThread
 
+
+    //------------------------------------------------------------
+    // getters
+//    public newMBox getMBox() { return mbox; }
+    public String getID() { return id; }
+
+    public String getReceivedMsg(){
+        return receivedMsg;
+    }
+    @Override
     public void run() {
-        System.out.println("Established connection to client " +
+        System.out.println("[SocketServer] Established connection to client " +
                 clientSocket.getInetAddress().getHostAddress() + ":" +
                 clientSocket.getPort());
 
@@ -28,59 +53,53 @@ public class SocketServer extends Thread{
             in = new DataInputStream(clientSocket.getInputStream());
             process();
         } catch (Exception e) {
-            System.out.println("Connection terminated!");
+            //System.out.println("[SocketServer] Connection terminated!");
         } finally {
             disconnect();
         }
     }
 
-    public void sendMsg(byte[] data, int len) throws IOException {
-        out.writeInt(len);
-        out.write(data, 0, len);
+    public synchronized void sendMsg(String msg) throws IOException {
+        out.writeInt(msg.length());
+        out.write(msg.getBytes(), 0, msg.length());
         out.flush();
     }
 
-
-    public byte[] receive() throws IOException {
-        byte[] data;
+    public final synchronized String receive() throws IOException {
+        byte[] data = new byte[4];
         int size;
         int len;
 
-        // TODO: TASK 4 - Receive data and store them in the byte array
-
-        // get the size of the message
         size = in.readInt();
-
-        // receive the message content
         data = new byte[size];
         do {
             len = in.read(data, data.length - size, size);
             size -= len;
         } while (size > 0);
-
-        return data;
+        return new String(data);
     }
 
     private void process() throws IOException {
         String send_msg;
         while (true) {
-            String line = aes.decrypt(new String(receive()));
+            String line = receive();
+
             if (line.equals("QUIT")) {
                 break;
             }
-
-            System.out.println("Client: " + line);
-            send_msg = aes.encrypt(line);
-            sendMsg(send_msg.getBytes(), send_msg.length());
-
-            send_msg = aes.encrypt("QUIT");
-            sendMsg(send_msg.getBytes(), send_msg.length());
+            //System.out.println("TN Client: " + line);
+            receivedMsg = line;
+            sendMsg(line);
+            ControlPanel.regThread(this);
         }
+
+//        send_msg = aes.encrypt("QUIT");
+        send_msg = "QUIT";
+        sendMsg(send_msg);
     }
 
-
     private void disconnect() {
-        System.out.println("disconnected.");
+        System.out.println("[SocketServer] disconnected.");
         try {
             in.close();
             out.close();
@@ -88,6 +107,6 @@ public class SocketServer extends Thread{
         } catch (IOException ex) {
         }
     }
+} // AppThread
 
 
-}
