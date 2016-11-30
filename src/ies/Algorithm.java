@@ -36,58 +36,56 @@ public class Algorithm {
         }
     }
 
-    public int oldfindBestElevator(ArrayList<Integer> speedOfElevator, ArrayList<Integer> numberOfDestinationInRelatedQueue, ArrayList<Integer> ElevatorFloor, ArrayList<Integer> directionOfElevator, int directionRequest, int requestFloor, int destination) {
-        int bestElevator = -1;
-        ArrayList<Integer> ElevatorOption = new ArrayList<Integer>();
 
-        //loop for finding available lifts that can pick up the passenger
+    public int findBestElevator(ArrayList<Integer> currentFloorOfElevator, ArrayList<Integer> directionOfElevator, int requestFloor, int requestDirection, int topFloor) {
+        ArrayList<Integer> diff = new ArrayList<Integer>();
+
+        int choice = 0;
         for (int i = 0; i < directionOfElevator.size(); i++) {
-            if (directionOfElevator.get(i) == 1) {
-                if (ElevatorFloor.get(i) == requestFloor) {
-                    bestElevator = i;
-                    return bestElevator;
+
+            if (directionOfElevator.get(i) == 1) { //Lift is stop
+                if (requestFloor > currentFloorOfElevator.get(i)) {
+                    diff.add(requestFloor - currentFloorOfElevator.get(i));
                 } else {
-                    ElevatorOption.add(i);
+                    diff.add(currentFloorOfElevator.get(i) - requestFloor);
                 }
-            } else if (directionOfElevator.get(i) == directionRequest) {
-                if (directionRequest == 0 && ElevatorFloor.get(i) < requestFloor) { //UP
-                    //If the lift hasn't passed through the current floor from Request
-                    ElevatorOption.add(i);
+            } else { //lift is moving
 
-                } else if (directionRequest == 2 && ElevatorFloor.get(i) > requestFloor) {//DOWN
-                    //If the lift hasn't passed through the current floor from Request
-                    ElevatorOption.add(i);
+                if (directionOfElevator.get(i) == requestDirection) { //if the lift has same direction as request
+                    if (directionOfElevator.get(i) == 0) { //Lift is going up
+                        if (requestFloor > currentFloorOfElevator.get(i)) { //lift hasn't passed through the requested floor
+                            diff.add((requestFloor - currentFloorOfElevator.get(i)));
+                        } else { //lift has passed through the requested floor
+                            diff.add((topFloor - currentFloorOfElevator.get(i)) + (topFloor - requestFloor));
+                        }
+                    } else { //lift is going down
+                        if (requestFloor > currentFloorOfElevator.get(i)) {//lift has passed through the request floor [Lift is going down]
+                            diff.add(currentFloorOfElevator.get(i) - requestFloor);
+                        } else {
+                            diff.add(currentFloorOfElevator.get(i) + requestFloor);
+                        }
+                    }
+                } else {//the lift does not have the same direction as request
+
+                    if (directionOfElevator.get(i) == 0) {//lift is going up
+                        diff.add(topFloor - currentFloorOfElevator.get(i) + requestFloor);
+                    } else {
+                        diff.add(currentFloorOfElevator.get(i) + requestFloor);
+                    }
                 }
             }
         }
 
-        if (ElevatorOption.size() == 0) {
-
-        } else if (ElevatorOption.size() == 1) {
-            bestElevator = ElevatorOption.get(0);
-        } else {
-            for (int i = 0; i < ElevatorOption.size(); i++) {
-                int tmp = ElevatorOption.get(0);
-                int diff = -1;
-                if (directionRequest == 0) {
-                }
+        System.out.println("Option in total: " + diff.size());
+        for (int i = 0; i < diff.size(); i++) {
+            int minValue = diff.get(i);
+            if (minValue < diff.get(i)) {
+                minValue = diff.get(i);
+                choice = i;
             }
-
         }
-
-
-        if (bestElevator != -1) {
-            return bestElevator;
-        } else {
-            System.out.println("Cant Find the Best Lift");
-            return 0;
-
-        }
+        return choice;
     }
-
-
-
-    public int findBestElevator(ArrayList<Integer> currentFloorOfElevator, ArrayList<Integer> directionOfElevator, ArrayList<Integer> )
 
 
     public static void main(String[] args) {
