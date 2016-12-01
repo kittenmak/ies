@@ -1,63 +1,29 @@
 package ies;
 
-
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Properties;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/**
- * Created by michaelleung on 30/11/2016.
- */
-public class KioskClient {
+public class UIPanel {
     private Socket clientSocket;
     private DataInputStream in;
     private DataOutputStream out;
-    private ArrayList<String> stringList = new ArrayList<String>();
-    private Random rand = new Random();
-    private ArrayList<KioskItem> item = new ArrayList<KioskItem>();
-    private int mElevator;
-    private int mFloor;
 
-    public KioskClient(){
-        readConfig();
+    private static Random rand = new Random();
+    private static int mFloor;
+    private static int mElevator;
+
+    public UIPanel(){
         connectServer();
-
-        for(int i=0; i<20; i++) {
-            KioskItem item = new KioskItem();
-            item.setDevice(String.valueOf(1));
-//                    (rand.nextInt(2)));
-            item.setCurFloor(String.valueOf(rand.nextInt(mFloor) + 1));
-            item.setDestFloor(String.valueOf(rand.nextInt(mFloor) + 1));
-            Calendar cal = Calendar.getInstance();
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-            item.setTime(sdf.format(cal.getTime()));
-
-            String msg = "k," + item.getDevice() + "," + item.getCurFloor() + "," + item.getDestFloor() + "," + item.getTime();
-            try {
-                send(msg);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        String data = null;
-        try {
-            data = receive();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        stringList.add(data);
-
     }
 
     void connectServer(){
         try {
             clientSocket = new Socket(SharedConsts.ServerAddress, SharedConsts.ServerPort);
-            System.out.printf("KC Connected to server using local port: %d.\n", clientSocket.getLocalPort());
+            System.out.printf("ElevatorPanel Connected to server using local port: %d.\n", clientSocket.getLocalPort());
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
         } catch (IOException e) {
@@ -96,7 +62,7 @@ public class KioskClient {
         }
     }
 
-    private void readConfig() {
+    private static void readConfig() {
         Properties prop = new Properties();
         InputStream input = null;
 
@@ -124,7 +90,23 @@ public class KioskClient {
         }
     }
 
-    public static void main(String args[]){
-        KioskClient kioskClient = new KioskClient();
-    } // end of main
+    public static void main(String Args[]) {
+        readConfig();
+        UI eUI = new UI(30, 4);
+
+        while (true) {
+
+//            eUI.upFloor((int) ((rand.nextInt(mFloor))));
+            eUI.upFloor((int)(Math.random()*4));
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(UIPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+
+    }
+
 }

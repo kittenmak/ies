@@ -48,7 +48,7 @@ public class Elevator {
     }
 
     static void setMsg(String type, String value) {
-        msg = String.valueOf(EID) + "," + type + "," + value;
+        msg = "e," + String.valueOf(EID) + "," + type + "," + value;
     }
 
     static void movement() {
