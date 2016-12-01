@@ -37,40 +37,40 @@ public class Algorithm {
     }
 
 
-    public int findBestElevator(ArrayList<Integer> currentFloorOfElevator, ArrayList<Integer> directionOfElevator, int requestFloor, int requestDirection, int topFloor) {
+    public int findBestElevator(int currentFloorOfElevator[], int directionOfElevator[], int requestFloor, int requestDirection, int topFloor) {
         ArrayList<Integer> diff = new ArrayList<Integer>();
 
         int choice = 0;
-        for (int i = 0; i < directionOfElevator.size(); i++) {
+        for (int i = 0; i < directionOfElevator.length; i++) {
 
-            if (directionOfElevator.get(i) == 1) { //Lift is stop
-                if (requestFloor > currentFloorOfElevator.get(i)) {
-                    diff.add(requestFloor - currentFloorOfElevator.get(i));
+            if (directionOfElevator[i] == 1) { //Lift is stop
+                if (requestFloor > currentFloorOfElevator[i]) {
+                    diff.add(requestFloor - currentFloorOfElevator[i]);
                 } else {
-                    diff.add(currentFloorOfElevator.get(i) - requestFloor);
+                    diff.add(currentFloorOfElevator[i] - requestFloor);
                 }
             } else { //lift is moving
 
-                if (directionOfElevator.get(i) == requestDirection) { //if the lift has same direction as request
-                    if (directionOfElevator.get(i) == 0) { //Lift is going up
-                        if (requestFloor > currentFloorOfElevator.get(i)) { //lift hasn't passed through the requested floor
-                            diff.add((requestFloor - currentFloorOfElevator.get(i)));
+                if (directionOfElevator[i] == requestDirection) { //if the lift has same direction as request
+                    if (directionOfElevator[i] == 0) { //Lift is going up
+                        if (requestFloor > currentFloorOfElevator[i]) { //lift hasn't passed through the requested floor
+                            diff.add((requestFloor - currentFloorOfElevator[i]));
                         } else { //lift has passed through the requested floor
-                            diff.add((topFloor - currentFloorOfElevator.get(i)) + (topFloor - requestFloor));
+                            diff.add((topFloor - currentFloorOfElevator[i]) + (topFloor - requestFloor));
                         }
                     } else { //lift is going down
-                        if (requestFloor > currentFloorOfElevator.get(i)) {//lift has passed through the request floor [Lift is going down]
-                            diff.add(currentFloorOfElevator.get(i) - requestFloor);
+                        if (requestFloor > currentFloorOfElevator[i]) {//lift has passed through the request floor [Lift is going down]
+                            diff.add(currentFloorOfElevator[i] - requestFloor);
                         } else {
-                            diff.add(currentFloorOfElevator.get(i) + requestFloor);
+                            diff.add(currentFloorOfElevator[i] + requestFloor);
                         }
                     }
                 } else {//the lift does not have the same direction as request
 
-                    if (directionOfElevator.get(i) == 0) {//lift is going up
-                        diff.add(topFloor - currentFloorOfElevator.get(i) + requestFloor);
+                    if (directionOfElevator[i] == 0) {//lift is going up
+                        diff.add(topFloor - currentFloorOfElevator[i] + requestFloor);
                     } else {
-                        diff.add(currentFloorOfElevator.get(i) + requestFloor);
+                        diff.add(currentFloorOfElevator[i] + requestFloor);
                     }
                 }
             }

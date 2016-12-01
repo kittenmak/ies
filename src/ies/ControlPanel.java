@@ -20,8 +20,13 @@ public class ControlPanel {
 
     private ArrayList<Integer> destination = new ArrayList<Integer>();
 
+    protected int[] currentFloorOfElevator = new int[4];
+    protected int[] directionOfElevator = new int[4];
+
+
     public ControlPanel() {
         startServer();
+        Algorithm ag = new Algorithm();
 
     }
 
@@ -54,9 +59,11 @@ public class ControlPanel {
     }
 
     private void solveMsgType(String msg) {
+        Algorithm ag = new Algorithm();
         String[] line = msg.split(",");
         if (line[0].equals("e")) {
             // ElevatorItem item = new ElevatorItem(line[1],line[2],line[3], line[4], line[5],line[6], line[7]);
+
         } else if (line[0].equals("k")) {
             if (Integer.valueOf(line[1]) == 0) {//RFID
                 if (findLoc(line[2]) != -1) {
@@ -67,6 +74,30 @@ public class ControlPanel {
                 requestedFloor.add(Integer.valueOf(line[1]));
                 destination.add(Integer.valueOf(line[2]));
             }
+        }
+
+        while (!requestedFloor.isEmpty()) {
+            int tmpDir;
+            if (requestedFloor.get(0) < destination.get(0)) {
+                tmpDir = 0;
+            } else {
+                tmpDir = 2;
+            }
+            if (requestedFloor.get(0) - destination.get(0) < 0) {//going up
+                int bestLift = ag.findBestElevator(currentFloorOfElevator, directionOfElevator, requestedFloor.get(0), tmpDir, 40);
+                if (bestLift == 0) {
+                    //update the lift 0
+
+                } else if (bestLift == 1) {
+                    //update the lift 1
+                } else if (bestLift == 2) {
+                    //update the lift 2
+                } else if (bestLift == 3) {
+                    //update the lift 3
+                }
+
+            }
+
         }
     }
 
