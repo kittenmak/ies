@@ -60,7 +60,7 @@ public class ControlPanel{
         }
     }
 
-    private static void solveMsgType(String msg) {
+    private static void solveMsgType(SocketServer socketServer, String msg) {
         Algorithm ag = new Algorithm();
         String[] line = msg.split(",");
         if (line[0].equals("e")) {
@@ -83,6 +83,11 @@ public class ControlPanel{
             }
         }
         else if(line[0].equals("ui")){
+            try {
+                socketServer.sendMsg("L1,5");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println("msg start with ui");
         }
 
@@ -178,7 +183,7 @@ public class ControlPanel{
         //System.out.println("cp alive thread = " + Thread.activeCount());
         newThreads.put(SocketServer.getID(), SocketServer);
 
-        solveMsgType(SocketServer.getReceivedMsg());
+        solveMsgType(SocketServer, SocketServer.getReceivedMsg());
 //        try {
 //            System.out.println("cp send dataaaaaaaa");
 //            SocketServer.sendMsg("send data to client from cp");

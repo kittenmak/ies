@@ -8,57 +8,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UIPanel {
-    private Socket clientSocket;
-    private DataInputStream in;
-    private DataOutputStream out;
+    private static UISocketClient mSocketClient;
 
     private static Random rand = new Random();
     private static int mFloor;
     private static int mElevator;
 
     public UIPanel(){
-        connectServer();
-    }
+        readConfig();
 
-    void connectServer(){
-        try {
-            clientSocket = new Socket(SharedConsts.ServerAddress, SharedConsts.ServerPort);
-            System.out.printf("ElevatorPanel Connected to server using local port: %d.\n", clientSocket.getLocalPort());
-            in = new DataInputStream(clientSocket.getInputStream());
-            out = new DataOutputStream(clientSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+        UISocketClient uiSocketClient = new UISocketClient(this);
+        Thread td = new Thread(uiSocketClient);
+        td.start();
 
-    public final synchronized void send(String msg) throws IOException {
-        out.writeInt(msg.length());
-        out.write(msg.getBytes(), 0, msg.length());
-        out.flush();
-    }
+        UI eUI = new UI(mFloor, mElevator);
+        while (true) {
 
-    public final synchronized String receive() throws IOException {
-        byte[] data = new byte[4];
-        int size;
-        int len;
+//            eUI.upFloor((int) ((rand.nextInt(mFloor))));
+            eUI.upFloor((int)(Math.random()*4));
 
-        size = in.readInt();
-        data = new byte[size];
-        do {
-            len = in.read(data, data.length - size, size);
-            size -= len;
-        } while (size > 0);
-
-        return new String(data);
-    }
-
-    public void disconnect() {
-        System.out.println("KC disconnected.");
-        try {
-            in.close();
-            out.close();
-            clientSocket.close();
-        } catch (IOException ex) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(UIPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -90,23 +63,26 @@ public class UIPanel {
         }
     }
 
-    public static void main(String Args[]) {
-        readConfig();
-        UI eUI = new UI(30, 4);
+    public static void regThread(UISocketClient uiSocketClient){
+        System.out.println("UI regThread");
+//        System.out.println("UI id = " + uiSocketClient.getID());
+        System.out.println("UI receivedMsg = " + uiSocketClient.getReceivedMsg());
+        System.out.println("UI alive thread = " + Thread.activeCount());
+//        newThreads.put(socketClient.getID(), socketClient);
+        mSocketClient = uiSocketClient;
 
-        while (true) {
-
-//            eUI.upFloor((int) ((rand.nextInt(mFloor))));
-            eUI.upFloor((int)(Math.random()*4));
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(UIPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        String msg = "ui,getmsg";
+        try {
+            mSocketClient.send(msg);
+            String receive_msg = mSocketClient.receive();
+            System.out.println("UI receive_msg : " + receive_msg);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-
+    public static void main(String Args[]) {
+        UIPanel uiPanel = new UIPanel();
     }
 
 }
