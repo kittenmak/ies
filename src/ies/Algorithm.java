@@ -28,11 +28,11 @@ public class Algorithm {
         return queue;
     }
 
-    public boolean findDirection(int[] input) {
+    public int findDirection(int[] input) {
         if (input[0] > input[1]) {
-            return false;
+            return 2;
         } else {
-            return true;
+            return 0;
         }
     }
 

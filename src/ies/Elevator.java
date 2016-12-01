@@ -241,10 +241,10 @@ public class Elevator {
     }
 
     public static void regThread(SocketClient socketClient) {
-        System.out.println("Elevator regThread");
-        System.out.println("Elevator id = " + socketClient.getID());
-        System.out.println("Elevator receivedMsg = " + socketClient.getReceivedMsg());
-        System.out.println("Elevator alive thread = " + Thread.activeCount());
+//        System.out.println("Elevator regThread");
+//        System.out.println("Elevator id = " + socketClient.getID());
+//        System.out.println("Elevator receivedMsg = " + socketClient.getReceivedMsg());
+//        System.out.println("Elevator alive thread = " + Thread.activeCount());
         mSocketClient = socketClient;
 
         initMsg();
@@ -254,6 +254,20 @@ public class Elevator {
 //            mSocketClient.send(msg);
             String msg = mSocketClient.receive();
             System.out.println("From CP's msg : " + msg);
+            String[] line = msg.split(",");
+            if (line[0].equals("e")) {
+                if (Integer.valueOf(line[1]) == EID) {
+                    if (Integer.valueOf(line[1]) < Integer.valueOf(line[2])) {
+                        upQueue.add(Integer.valueOf(line[1]));
+                        upQueue.add(Integer.valueOf(line[2]));
+                    } else {
+                        downQueue.add(Integer.valueOf(line[1]));
+                        downQueue.add(Integer.valueOf(line[2]));
+                    }
+                }
+            }
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -262,12 +276,11 @@ public class Elevator {
 
     public static void main(String args[]) {
 
-        Elevator e1 = new Elevator(2);
+        Elevator e1 = new Elevator(4);
         e1.direction = 0;
         e1.status = 0;
         e1.upQueue.add(3);
         e1.upQueue.add(8);
-
 
 
     } // end of main

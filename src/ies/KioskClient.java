@@ -33,6 +33,12 @@ public class KioskClient {
 //                    (rand.nextInt(2)));
             item.setCurFloor(String.valueOf(rand.nextInt(mFloor) + 1));
             item.setDestFloor(String.valueOf(rand.nextInt(mFloor) + 1));
+
+            while(item.getCurFloor().equals(item.getDestFloor())){
+                item.setCurFloor(String.valueOf(rand.nextInt(mFloor) + 1));
+                item.setDestFloor(String.valueOf(rand.nextInt(mFloor) + 1));
+            }
+
             Calendar cal = Calendar.getInstance();
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
             item.setTime(sdf.format(cal.getTime()));
