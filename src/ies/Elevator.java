@@ -4,10 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * Created by Kitten on 1/12/2016.
@@ -15,55 +12,46 @@ import java.util.TimerTask;
 
 //this is a socket client, send parameters automatically
 public class Elevator {
-    private int currentFloor;
-    private ArrayList<Integer> downQueue = new ArrayList<Integer>();
-    private ArrayList<Integer> upQueue = new ArrayList<Integer>();
+//    private static Hashtable<String, SocketClient> newThreads = null;
+    private static SocketClient mSocketClient;
+    private static int currentFloor;
+    private static ArrayList<Integer> downQueue = new ArrayList<Integer>();
+    private static ArrayList<Integer> upQueue = new ArrayList<Integer>();
     //private int idleTimer = 10;
-    private int direction;
+    private static int direction;
     //private int speed = 1000;
 
-    Socket clientSocket = null;
-    DataInputStream in;
-    DataOutputStream out;
-    private String msg;
-    private int EID;
-    private int maxFloor = 15;
+    private static String msg;
+    private static int EID;
+    private static int maxFloor = 15;
     Timer speed = new Timer();
-    int idleTime = 5000;
-    int stopTime = 2500;
+    static int idleTime = 5000;
+    static int stopTime = 2500;
     boolean stop = false;
     int moveTime = 1500;
     Timer openDoor = new Timer();
 
-    Timer up = new Timer();
-    Timer down = new Timer();
-    Timer stopShort = new Timer();
-    Timer stopLong = new Timer();
-    int status; //0=up, 1=stopLong, 2=down, 3=stopShort
+    static Timer up = new Timer();
+    static Timer down = new Timer();
+    static Timer stopShort = new Timer();
+    static Timer stopLong = new Timer();
+    static int status; //0=up, 1=stopLong, 2=down, 3=stopShort
 
     public Elevator(int eid) {
         this.EID = eid;
-        connectServer();
+//        connectServer();
+//        newThreads = new Hashtable<String, SocketClient>();
 
-
-        try {
-            initMsg();
-
-            String data = receive();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        movement();
-
-
+        SocketClient socketClient = new SocketClient(String.valueOf(EID), this);
+        Thread td = new Thread(socketClient);
+        td.start();
     }
 
-    void setMsg(String type, String value) {
+    static void setMsg(String type, String value) {
         msg = String.valueOf(EID) + "," + type + "," + value;
     }
 
-    void movement() {
+    static void movement() {
 
         System.out.println("Lets move!");
         if(status==0){ //UP
@@ -101,9 +89,9 @@ public class Elevator {
                     }
                     try {
                         setMsg("dir", String.valueOf(direction));
-                        send(msg);
+                        mSocketClient.send(msg);
                         setMsg("cf", String.valueOf(currentFloor));
-                        send(msg);
+                        mSocketClient.send(msg);
                     } catch (IOException e) {
 
                     }
@@ -134,9 +122,9 @@ public class Elevator {
 
             try {
                 setMsg("dir", String.valueOf(direction));
-                send(msg);
+                mSocketClient.send(msg);
                 setMsg("cf", String.valueOf(currentFloor));
-                send(msg);
+                mSocketClient.send(msg);
             } catch (IOException e) {
 
             }
@@ -170,9 +158,9 @@ public class Elevator {
 
                     try {
                         setMsg("dir", String.valueOf(direction));
-                        send(msg);
+                        mSocketClient.send(msg);
                         setMsg("cf", String.valueOf(currentFloor));
-                        send(msg);
+                        mSocketClient.send(msg);
                     } catch (IOException e) {
 
                     }
@@ -205,11 +193,11 @@ public class Elevator {
 
             try {
                 setMsg("dir", String.valueOf(direction));
-                send(msg);
+                mSocketClient.send(msg);
                 setMsg("status", String.valueOf("DOOR OPENED"));
-                send(msg);
+                mSocketClient.send(msg);
                 setMsg("cf", String.valueOf(currentFloor));
-                send(msg);
+                mSocketClient.send(msg);
             } catch (IOException e) {
 
             }
@@ -298,64 +286,23 @@ public class Elevator {
 //                               }, 0, moveTime);
     }
 
-    void initMsg() {
+
+static void initMsg() {
         try {
             setMsg("launch", "launched");
-            send(msg);
+            mSocketClient.send(msg);
             setMsg("cf", String.valueOf(currentFloor));
-            send(msg);
+            mSocketClient.send(msg);
             setMsg("up", String.valueOf(upQueue));
-            send(msg);
+            mSocketClient.send(msg);
             setMsg("down", String.valueOf(downQueue));
-            send(msg);
+            mSocketClient.send(msg);
             //setMsg("idle", String.valueOf(idleTimer));
             //send(msg);
             setMsg("dir", String.valueOf(direction));
-            send(msg);
+            mSocketClient.send(msg);
         } catch (IOException e) {
 
-        }
-    }
-
-    void connectServer() {
-        try {
-            clientSocket = new Socket(SharedConsts.ServerAddress, SharedConsts.ServerPort);
-            System.out.printf("Lift Connected to server using local port: %d.\n", clientSocket.getLocalPort());
-            in = new DataInputStream(clientSocket.getInputStream());
-            out = new DataOutputStream(clientSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public final synchronized void send(String msg) throws IOException {
-        out.writeInt(msg.length());
-        out.write(msg.getBytes(), 0, msg.length());
-        out.flush();
-    }
-
-    public final synchronized String receive() throws IOException {
-        byte[] data = new byte[4];
-        int size;
-        int len;
-
-        size = in.readInt();
-        data = new byte[size];
-        do {
-            len = in.read(data, data.length - size, size);
-            size -= len;
-        } while (size > 0);
-
-        return new String(data);
-    }
-
-    public void disconnect() {
-        System.out.println("Lift disconnected.");
-        try {
-            in.close();
-            out.close();
-            clientSocket.close();
-        } catch (IOException ex) {
         }
     }
 
@@ -374,6 +321,33 @@ public class Elevator {
     public void setUpQueue(ArrayList<Integer> upQueue) {
         this.upQueue = upQueue;
     }
+
+    public static void regThread(SocketClient socketClient) {
+        System.out.println("Elevator regThread");
+        System.out.println("Elevator id = " + socketClient.getID());
+        System.out.println("Elevator receivedMsg = " + socketClient.getReceivedMsg());
+        System.out.println("Elevator alive thread = " + Thread.activeCount());
+//        newThreads.put(socketClient.getID(), socketClient);
+        mSocketClient = socketClient;
+
+//        try {
+            initMsg();
+//
+//            String data = receive();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        movement();
+        try {
+            mSocketClient.send(msg);
+            String msg = mSocketClient.receive();
+            System.out.println("eleavtor : " + msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    } // regThread
 
     public static void main(String args[]) {
 

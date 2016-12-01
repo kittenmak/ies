@@ -11,7 +11,7 @@ import java.net.Socket;
 
 //======================================================================
 // Thread
-public class SocketServer implements Runnable {
+public class SocketServer implements Runnable{
     Socket clientSocket = null;
     DataInputStream in;
     DataOutputStream out;
@@ -37,11 +37,14 @@ public class SocketServer implements Runnable {
     //------------------------------------------------------------
     // getters
 //    public newMBox getMBox() { return mbox; }
-    public String getID() { return id; }
+    public String getID() {
+        return id;
+    }
 
-    public String getReceivedMsg(){
+    public String getReceivedMsg() {
         return receivedMsg;
     }
+
     @Override
     public void run() {
         System.out.println("[SocketServer] Established connection to client " +

@@ -15,7 +15,7 @@ import java.util.Properties;
  */
 public class ControlPanel {
     private static Hashtable<String, SocketServer> newThreads = null;
-    private static Hashtable<String, SocketServer> kioskThreads = null;
+//    private static Hashtable<String, SocketServer> kioskThreads = null;
     private ArrayList<Integer> requestedFloor = new ArrayList<Integer>();
 
     private ArrayList<Integer> destination = new ArrayList<Integer>();
@@ -142,6 +142,12 @@ public class ControlPanel {
         System.out.println("cp receivedMsg = " + SocketServer.getReceivedMsg());
         //System.out.println("cp alive thread = " + Thread.activeCount());
         newThreads.put(SocketServer.getID(), SocketServer);
+        try {
+            System.out.println("cp send dataaaaaaaa");
+            SocketServer.sendMsg("send data to client from cp");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     } // regThread
 
