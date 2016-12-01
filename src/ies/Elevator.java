@@ -29,11 +29,17 @@ public class Elevator {
     private int EID;
     private int maxFloor = 15;
     Timer speed = new Timer();
-    Timer idle = new Timer();
-    int stopTime = 50000;
+    int idleTime = 5000;
+    int stopTime = 2500;
     boolean stop = false;
     int moveTime = 1500;
     Timer openDoor = new Timer();
+
+    Timer up = new Timer();
+    Timer down = new Timer();
+    Timer stopShort = new Timer();
+    Timer stopLong = new Timer();
+    int status; //0=up, 1=stopLong, 2=down, 3=stopShort
 
     public Elevator(int eid) {
         this.EID = eid;
@@ -48,7 +54,7 @@ public class Elevator {
             e.printStackTrace();
         }
 
-            movement();
+        movement();
 
 
     }
@@ -59,82 +65,237 @@ public class Elevator {
 
     void movement() {
 
-        speed.schedule(new TimerTask() {
-            @Override
+        System.out.println("Lets move!");
+        if(status==0){ //UP
 
-            public void run() {
-
-
-                if (direction == 0) {//UP
-                    if (currentFloor < maxFloor) {
+            up.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (currentFloor < maxFloor && !upQueue.isEmpty() && status==0) {
                         currentFloor++;
-                        System.out.println(direction + " cf: " +currentFloor);
-                        if(currentFloor==upQueue.get(0)){
+                        System.out.println(direction + " cf: " + currentFloor);
+                        System.out.println("Current Queue" + upQueue);
+                        if (currentFloor == upQueue.get(0)) {
+                            System.out.println("Arrived!");
                             upQueue.remove(0);
-                            stop=true;
-                            System.out.println("Stop La!");
-                            while(stop){
-                                direction=1;
-
-                                openDoor.schedule(new TimerTask() {
-                                    @Override
-                                    public void run() {
-                                        direction=0;
-                                        stop=false;
-                                    }
-                                },0, stopTime);
-                            }
-                        }
-                        try {
-                            setMsg("dir", String.valueOf(direction));
-                            send(msg);
-                            setMsg("cf", String.valueOf(currentFloor));
-                            send(msg);
-                        } catch (IOException e) {
+                            status = 3; //short stop
+                            //up.purge();
+                            movement();
 
                         }
-                    } else {
-                        direction = 1;
-                        System.out.println("YO changed");
-
-                        try {
-                            setMsg("dir", String.valueOf(direction));
-                            send(msg);
-                            setMsg("cf", String.valueOf(currentFloor));
-                            send(msg);
-                        } catch (IOException e) {
-
+                    } else if(currentFloor==maxFloor) {
+                        if (downQueue.isEmpty()) {
+                            System.out.println("HI, changed status to ? = " + status);
+                            status = 1; // long stop
+                            direction = 1;
+                            //up.cancel();
+                            up.purge();
+                            movement();
+                        } else {
+                            status = 2; //go down
+                            direction = 2;
+                           // up.cancel();
+                            up.purge();
+                            movement();
                         }
                     }
-                } else if (direction == 1) {//STOP
-                    System.out.println(direction + " cf: " +currentFloor);
-                } else {//DOWN
-                    if (currentFloor > 0) {
-                        currentFloor--;
-                        try {
-                            setMsg("dir", String.valueOf(direction));
-                            send(msg);
-                            setMsg("cf", String.valueOf(currentFloor));
-                            send(msg);
-                        } catch (IOException e) {
+                    try {
+                        setMsg("dir", String.valueOf(direction));
+                        send(msg);
+                        setMsg("cf", String.valueOf(currentFloor));
+                        send(msg);
+                    } catch (IOException e) {
 
-                        }
-
-                    } else {
-                        direction = 1;
-                        System.out.println("YO changed");
-                        try {
-                            setMsg("dir", String.valueOf(direction));
-                            send(msg);
-                            setMsg("cf", String.valueOf(currentFloor));
-                            send(msg);
-                        } catch (IOException e) {
-
-                        }
                     }
                 }
+            }, 1500,1500);
+
+
+        }else if(status==1){
+
+            System.out.println("Lift is already idle.");
+            if(currentFloor>0){
+                stopLong.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (currentFloor > 0) {
+                            downQueue.add(0);
+                            System.out.println("Down Queue added G/F: " + downQueue);
+                            status=2;
+                            direction=2;
+                            movement();
+                        }
+                    }
+                }, idleTime);
+            }else{
+                System.out.println("This lift is waiting for singal on G/F");
             }
-        }, 0, moveTime);
+
+
+            try {
+                setMsg("dir", String.valueOf(direction));
+                send(msg);
+                setMsg("cf", String.valueOf(currentFloor));
+                send(msg);
+            } catch (IOException e) {
+
+            }
+
+        }else if(status==2){
+
+            down.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (currentFloor > 0 && !downQueue.isEmpty() && status==2) {
+                        currentFloor--;
+                        System.out.println(direction + " cf: " + currentFloor);
+                        if (currentFloor == downQueue.get(0)) {
+                            downQueue.remove(0);
+                            status = 3;
+                        }
+                    } else if(currentFloor==0) {
+                        if (upQueue.isEmpty()) {
+                            status = 1;
+                            direction = 1;
+                            System.out.println("UpQueue is empty.");
+                            down.purge();
+                            movement();
+                        } else {
+                            status = 0;
+                            direction = 0;
+                            down.purge();
+                            movement();
+                        }
+                    }
+
+                    try {
+                        setMsg("dir", String.valueOf(direction));
+                        send(msg);
+                        setMsg("cf", String.valueOf(currentFloor));
+                        send(msg);
+                    } catch (IOException e) {
+
+                    }
+
+                }
+            }, 1500, 1500);
+
+
+        }else{
+            System.out.println("This is case 3");
+            stopShort.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("Door is opened! - direction = " + direction);
+
+
+                    if (direction == 0 &&!upQueue.isEmpty()) {
+                        status = 0;
+                        movement();
+                    } else if (direction == 2 && !downQueue.isEmpty()) {
+                        status = 2;
+                        movement();
+                    }
+                    if(upQueue.isEmpty() && downQueue.isEmpty()){
+                        status =1;
+                        movement();
+                    }
+                }
+            }, stopTime);
+
+            try {
+                setMsg("dir", String.valueOf(direction));
+                send(msg);
+                setMsg("status", String.valueOf("DOOR OPENED"));
+                send(msg);
+                setMsg("cf", String.valueOf(currentFloor));
+                send(msg);
+            } catch (IOException e) {
+
+            }
+        }
+
+
+
+
+//        speed.schedule(new
+//
+//                               TimerTask() {
+//                                   @Override
+//
+//                                   public void run() {
+//
+//
+//                                       if (direction == 0) {//UP
+//                                           if (currentFloor < maxFloor) {
+//                                               currentFloor++;
+//                                               System.out.println(direction + " cf: " + currentFloor);
+//                                               if (currentFloor == upQueue.get(0)) {
+//                                                   upQueue.remove(0);
+//                                                   stop = true;
+//                                                   System.out.println("Stop La!");
+//                                                   while (stop) {
+//                                                       direction = 1;
+//
+//                                                       openDoor.schedule(new TimerTask() {
+//                                                           @Override
+//                                                           public void run() {
+//                                                               direction = 0;
+//                                                               stop = false;
+//                                                           }
+//                                                       }, 0, stopTime);
+//                                                   }
+//                                               }
+//                                               try {
+//                                                   setMsg("dir", String.valueOf(direction));
+//                                                   send(msg);
+//                                                   setMsg("cf", String.valueOf(currentFloor));
+//                                                   send(msg);
+//                                               } catch (IOException e) {
+//
+//                                               }
+//                                           } else {
+//                                               direction = 1;
+//                                               System.out.println("YO changed");
+//
+//                                               try {
+//                                                   setMsg("dir", String.valueOf(direction));
+//                                                   send(msg);
+//                                                   setMsg("cf", String.valueOf(currentFloor));
+//                                                   send(msg);
+//                                               } catch (IOException e) {
+//
+//                                               }
+//                                           }
+//                                       } else if (direction == 1) {//STOP
+//                                           System.out.println(direction + " cf: " + currentFloor);
+//                                       } else {//DOWN
+//                                           if (currentFloor > 0) {
+//                                               currentFloor--;
+//                                               try {
+//                                                   setMsg("dir", String.valueOf(direction));
+//                                                   send(msg);
+//                                                   setMsg("cf", String.valueOf(currentFloor));
+//                                                   send(msg);
+//                                               } catch (IOException e) {
+//
+//                                               }
+//
+//                                           } else {
+//                                               direction = 1;
+//                                               System.out.println("YO changed");
+//                                               try {
+//                                                   setMsg("dir", String.valueOf(direction));
+//                                                   send(msg);
+//                                                   setMsg("cf", String.valueOf(currentFloor));
+//                                                   send(msg);
+//                                               } catch (IOException e) {
+//
+//                                               }
+//                                           }
+//                                       }
+//                                   }
+//                               }, 0, moveTime);
     }
 
     void initMsg() {
@@ -217,7 +378,8 @@ public class Elevator {
     public static void main(String args[]) {
 
         Elevator e = new Elevator(1);
-        e.direction=0;
+        e.direction = 0;
+        e.status = 0;
         e.upQueue.add(3);
         e.upQueue.add(8);
 
