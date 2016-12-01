@@ -1,12 +1,14 @@
 package ies;
 
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Properties;
+import java.util.Random;
 
 /**
  * Created by michaelleung on 30/11/2016.
@@ -16,14 +18,30 @@ public class KioskClient {
     private DataInputStream in;
     private DataOutputStream out;
     private ArrayList<String> stringList = new ArrayList<String>();
+    private Random rand = new Random();
+    private ArrayList<KioskItem> item = new ArrayList<KioskItem>();
+    private int mElevator;
+    private int mFloor;
 
     public KioskClient(){
+        readConfig();
         connectServer();
-        String msg = "haha2";
-        try {
-            send(msg);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        for(int i=0; i<20; i++) {
+            KioskItem item = new KioskItem();
+            item.setDevice(String.valueOf(rand.nextInt(2)));
+            item.setCurFloor(String.valueOf(rand.nextInt(mFloor) + 1));
+            item.setDestFloor(String.valueOf(rand.nextInt(mFloor) + 1));
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            item.setTime(sdf.format(cal.getTime()));
+
+            String msg = item.getDevice() + "," + item.getCurFloor() + "," + item.getDestFloor() + "," + item.getTime();
+            try {
+                send(msg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         String data = null;
         try {
@@ -74,6 +92,34 @@ public class KioskClient {
             out.close();
             clientSocket.close();
         } catch (IOException ex) {
+        }
+    }
+
+    private void readConfig() {
+        Properties prop = new Properties();
+        InputStream input = null;
+
+        try {
+
+            input = new FileInputStream(SharedConsts.ConfigFilePath);
+
+            // load a properties file
+            prop.load(input);
+
+            // get the property value and print it out
+            mElevator = Integer.valueOf(prop.getProperty(SharedConsts.Elevator));
+            mFloor = Integer.valueOf(prop.getProperty(SharedConsts.Floor));
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

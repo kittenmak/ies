@@ -97,11 +97,9 @@ public class Config {
         if (!file.exists() || editValue) {
 //            System.out.println("file not exist");
             try {
-                String savePath = SharedConsts.Path;//+SharedConsts.FolderName;
-                //String savePath = "/Users/LIMAN/Desktop/comp4007";
+                String savePath = SharedConsts.Path;
                 File saveLocation = new File(savePath);
                 if(!saveLocation.exists()){
-//                    System.out.print("create folder");
                     saveLocation.mkdirs();
 
                     output = new FileOutputStream(SharedConsts.ConfigFilePath);
@@ -109,6 +107,7 @@ public class Config {
                     // set the properties value
                     prop.setProperty(SharedConsts.Elevator, String.valueOf(mElevator));
                     prop.setProperty(SharedConsts.Floor, String.valueOf(mFloor));
+                    prop.setProperty(SharedConsts.totalRFID, "0");
 
                     // save properties to project root folder
                     prop.store(output, null);
@@ -119,6 +118,7 @@ public class Config {
                     // set the properties value
                     prop.setProperty(SharedConsts.Elevator, String.valueOf(mElevator));
                     prop.setProperty(SharedConsts.Floor, String.valueOf(mFloor));
+                    prop.setProperty(SharedConsts.totalRFID, "0");
 
                     // save properties to project root folder
                     prop.store(output, null);

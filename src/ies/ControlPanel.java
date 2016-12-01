@@ -15,18 +15,20 @@ import java.util.Properties;
 /**
  * Created by michaelleung on 30/11/2016.
  */
-public class ControlPanel extends Thread{
+public class ControlPanel{
     private static Hashtable<String, SocketServer> newThreads = null;
-//    private static Hashtable<String, SocketServer> kioskThreads = null;
     private ArrayList<Integer> requestedFloor = new ArrayList<Integer>();
 
     private ArrayList<Integer> destination = new ArrayList<Integer>();
 
     protected int[] currentFloorOfElevator = new int[4];
     protected int[] directionOfElevator = new int[4];
-
+    private ArrayList<String> waitQueue = new ArrayList<String>();
+    private int mFloor;
+    private int mElevator;
 
     public ControlPanel() {
+        readConfig();
         startServer();
         Algorithm ag = new Algorithm();
 
@@ -102,7 +104,7 @@ public class ControlPanel extends Thread{
 //
 //        }
 //    }
-
+//
 //    public int findLoc(String id) {
 //        Properties prop = new Properties();
 //        InputStream input = null;
@@ -134,8 +136,32 @@ public class ControlPanel extends Thread{
 //
 //    }
 
-    private static void readConfig() {
+    private void readConfig() {
+        Properties prop = new Properties();
+        InputStream input = null;
 
+        try {
+
+            input = new FileInputStream(SharedConsts.ConfigFilePath);
+
+            // load a properties file
+            prop.load(input);
+
+            // get the property value and print it out
+            mElevator = Integer.valueOf(prop.getProperty(SharedConsts.Elevator));
+            mFloor = Integer.valueOf(prop.getProperty(SharedConsts.Floor));
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static void regThread(SocketServer SocketServer) {
@@ -144,12 +170,12 @@ public class ControlPanel extends Thread{
         System.out.println("cp receivedMsg = " + SocketServer.getReceivedMsg());
         //System.out.println("cp alive thread = " + Thread.activeCount());
         newThreads.put(SocketServer.getID(), SocketServer);
-        try {
-            System.out.println("cp send dataaaaaaaa");
-            SocketServer.sendMsg("send data to client from cp");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            System.out.println("cp send dataaaaaaaa");
+//            SocketServer.sendMsg("send data to client from cp");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     } // regThread
 
@@ -158,6 +184,10 @@ public class ControlPanel extends Thread{
 //        ElevatorUI elevatorUI = new ElevatorUI(40, 4);
 //        Thread t1 = new Thread(new ControlPanel());
 //        elevatorUI.setLiftFloor(1,4);
+        UI ui = new UI(40,4);
+        ui.setLiftFloor(1,4);
+
         ControlPanel panel = new ControlPanel();
+
     } // end of main
 }

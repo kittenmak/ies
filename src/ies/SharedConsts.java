@@ -2,8 +2,8 @@ package ies;
 
 public class SharedConsts {
 
-	// public static final String Path = "/Users/michaelleung/comp4007_DB/";
-	public static final String Path = "D:\\comp4007_DB\\";
+	 public static final String Path = "/Users/michaelleung/comp4007_DB/";
+//	public static final String Path = "D:\\comp4007_DB\\";
 	public static final String FolderName = "/comp4007/";
 //	public static final String Path = "/Users/LIMAN/Desktop/" + FolderName;
 
@@ -49,4 +49,6 @@ public class SharedConsts {
 	public static final String destination = "destination";
 	public static final String elevatorStatus = "elevatorStatus";
 	public static final String direction = "direction";
+
+	public static final String totalRFID = "totalRFID";
 }
