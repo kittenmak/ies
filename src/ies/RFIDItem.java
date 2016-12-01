@@ -8,8 +8,18 @@ public class RFIDItem {
     String expiryDate;
     String firstName;
     String surname;
-    //ArrayList<Integer> floor = new ArrayList<Integer>();
-    int floor;
+    String grantedFloor;
+
+    public RFIDItem(){
+
+    }
+    public RFIDItem(String id,String surname,String firstName, String grantedFloor, String expiryDate){
+        this.id = Integer.parseInt(id);
+        this.surname=surname;
+        this.firstName=firstName;
+        this.grantedFloor=grantedFloor;
+        this.expiryDate=expiryDate;
+    }
 
     public int getId() {
         return id;
@@ -35,11 +45,12 @@ public class RFIDItem {
     public void setSurname(String surname) {
         this.surname = surname;
     }
-    public int getFloor() {
-        return floor;
+    public String getGrantedFloor(){
+        return  grantedFloor;
     }
-    public void setFloor(int floor) {
-        this.floor = floor;
+
+    public void setGrantedFloor(String grantedFloor) {
+        this.grantedFloor = grantedFloor;
     }
 }
 
